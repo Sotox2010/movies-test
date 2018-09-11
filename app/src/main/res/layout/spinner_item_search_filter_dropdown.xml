@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TextView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    style="@style/TextAppearance.Subtitle1"
+    android:paddingStart="@dimen/spacing_medium"
+    android:paddingEnd="@dimen/spacing_medium"
+    android:layout_width="match_parent"
+    android:fontFamily="sans-serif"
+    android:layout_height="48dp"
+    android:gravity="center_vertical"
+    tools:text="Popular Movies"/>

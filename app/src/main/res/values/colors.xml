@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <color name="transparent">#00000000</color>
+    <color name="white">#ffffffff</color>
+    <color name="black">#ff000000</color>
+
+    <color name="window_background">#fafafa</color> <!-- grey 50 -->
+    <color name="card">@color/white</color>
+
+    <!-- App palette -->
+    <color name="colorPrimary">#3F51B5</color>
+    <color name="colorPrimaryDark">#303F9F</color>
+    <color name="colorAccent">#FF4081</color>
+    <color name="theme_control_normal">#1e000000</color>
+    <color name="theme_control_highlight">#33e5086e</color>
+    <color name="theme_error">#ef5350</color>
+
+    <!-- Text colors -->
+    <color name="textColorPrimary">#de000000</color> <!-- 87% black -->
+    <color name="textColorSecondary">#8a000000</color> <!-- 54% black -->
+    <color name="textColorTertiary">#61000000</color> <!-- 38% black -->
+    <color name="text_colored">@color/colorPrimary</color>
+    <color name="text_accent">@color/colorAccent</color>
+    <color name="text_accent_disabled">#66e5086e</color> <!-- 40% accent -->
+    <color name="divider_light">#1f000000</color> <!-- 12% black -->
+
+    <color name="textColorPrimaryInverse">@color/white</color>
+    <color name="textColorSecondaryInverse">#b3ffffff</color> <!-- 70% white -->
+    <color name="textColorTertiaryInverse">#4dffffff</color> <!-- 30% white -->
+    <color name="divider_light_inverse">#1effffff</color> <!-- 12% white -->
+
+    <!-- System icons -->
+    <color name="icon_system">#8a000000</color> <!-- 54% black -->
+    <color name="icon_system_inactive">#42000000</color> <!-- 26% black -->
+    <color name="icon_system_inverse">@color/white</color>
+    <color name="icon_system_inactive_inverse">#4dffffff</color> <!-- 30% white -->
+
+</resources>

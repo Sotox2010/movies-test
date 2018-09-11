@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <dimen name="keyline_margin">64dp</dimen>
+
+    <dimen name="backdrop_ratio_dynamic">0</dimen>
+    <dimen name="backdrop_height_dynamic">168dp</dimen>
+
+</resources>

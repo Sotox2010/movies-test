@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Aspect ratio -->
+    <dimen name="keyline_margin">16dp</dimen>
+    <dimen name="keyline_content_start">72dp</dimen>
+
+    <!-- Aspect ratio -->
+    <dimen name="movie_poster_aspect_ratio">0.667870</dimen>
+    <dimen name="movie_backdrop_aspect_ratio">1.781250</dimen>
+
+    <!-- Common spacing -->
+    <dimen name="spacing_small">4dp</dimen>
+    <dimen name="spacing_medium">8dp</dimen>
+    <dimen name="spacing_medium_large">12dp</dimen>
+    <dimen name="spacing_large">16dp</dimen>
+    <dimen name="spacing_xlarge">24dp</dimen>
+    <dimen name="spacing_huge">32dp</dimen>
+
+    <!-- Text size -->
+    <dimen name="text_size_tiny">10sp</dimen>
+    <dimen name="text_size_small">12sp</dimen>
+    <dimen name="text_size_medium">14sp</dimen>
+    <dimen name="text_size_medium_large">16sp</dimen>
+    <dimen name="text_size_large">18sp</dimen>
+    <dimen name="text_size_xlarge">24dp</dimen>
+    <dimen name="text_size_huge">32dp</dimen>
+
+    <dimen name="movie_grid_margin_vertical">4dp</dimen>
+    <dimen name="movie_grid_margin_horizontal">4dp</dimen>
+
+    <dimen name="backdrop_ratio_dynamic">@dimen/movie_backdrop_aspect_ratio</dimen>
+    <dimen name="backdrop_height_dynamic">0dp</dimen>
+
+    <dimen name="movies_grid_padding_with_tabs">108dp</dimen>
+
+
+</resources>

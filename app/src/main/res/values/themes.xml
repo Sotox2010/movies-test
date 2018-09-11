@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="Theme.PopularMovies" parent="Theme.AppCompat.NoActionBar">
+
+        <!-- Customize your theme here. -->
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+
+        <!-- Text colors -->
+        <item name="android:textColorPrimary">@color/textColorPrimaryInverse</item>
+        <item name="android:textColorPrimaryInverse">@color/textColorPrimary</item>
+        <item name="android:textColorSecondary">@color/textColorSecondaryInverse</item>
+        <item name="android:textColorSecondaryInverse">@color/textColorSecondary</item>
+        <item name="android:textColorHint">@color/textColorTertiaryInverse</item>
+        <item name="android:textColorHintInverse">@color/textColorTertiary</item>
+        <item name="android:textColorTertiary">@color/textColorTertiaryInverse</item>
+        <item name="android:textColorTertiaryInverse">@color/textColorTertiary</item>
+        <item name="android:textColorLink">@color/colorAccent</item>
+
+        <!-- Default toolbar style -->
+        <item name="toolbarStyle">@style/PopularMovies.Toolbar</item>
+
+    </style>
+
+    <style name="Theme.PopularMovies.MovieDetail">
+
+        <item name="android:windowTranslucentStatus">true</item>
+        <item name="android:statusBarColor">@color/transparent</item>
+
+    </style>
+
+</resources>

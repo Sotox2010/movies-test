@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/searchRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/movies_grid_padding_with_tabs"/>
+
+    <include layout="@layout/include_empty_view"/>
+
+    <ProgressBar
+        android:id="@+id/progressIndicator"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:visibility="gone"
+        tools:visibility="visible"/>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            app:navigationIcon="@drawable/ic_back_white_24dp"
+            android:background="@null">
+
+            <EditText
+                android:id="@+id/queryEditText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:gravity="center_vertical"
+                android:inputType="text"
+                tools:text="Search query"
+                android:hint="Start typing to search online"
+                android:textSize="18sp" />
+
+        </android.support.v7.widget.Toolbar>
+
+        <RadioGroup
+            android:id="@+id/filterGroup"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:paddingStart="@dimen/keyline_content_start"
+            android:gravity="center_vertical">
+
+            <RadioButton
+                style="@style/FilterRadioButton"
+                android:id="@+id/radioFilterMovies"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:checked="true"
+                android:text="Movies"/>
+
+            <RadioButton
+                style="@style/FilterRadioButton"
+                android:id="@+id/radioFilterTvSeries"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="@dimen/spacing_medium_large"
+                android:text="TV Series"/>
+
+        </RadioGroup>
+
+    </android.support.design.widget.AppBarLayout>
+
+    <TextView
+        android:id="@+id/onlineWarningView"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:paddingStart="@dimen/spacing_medium_large"
+        android:paddingEnd="@dimen/spacing_medium_large"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:background="@color/theme_error"
+        android:textColor="?android:textColorPrimary"
+        android:textStyle="bold"
+        android:visibility="gone"
+        tools:visibility="visible"
+        android:text="No internet connection"/>
+
+</FrameLayout>

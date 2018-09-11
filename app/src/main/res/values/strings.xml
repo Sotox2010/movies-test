@@ -1,0 +1,30 @@
+<resources>
+    <string name="app_name">Rappi Movies</string>
+
+    <string name="error_connection">There was an error while retrieving movies. Check your connection and try again.</string>
+    <string name="retry">Retry</string>
+
+    <string name="filter_source_movies">Movies</string>
+    <string name="filter_source_tv">TV Series</string>
+
+    <string name="category_most_popular">Popular</string>
+    <string name="category_top_rated">Top Rated</string>
+    <string name="category_upcoming">Upcoming</string>
+
+    <string-array name="category_filters_movie">
+        <item>@string/category_most_popular</item>
+        <item>@string/category_top_rated</item>
+        <item>@string/category_upcoming</item>
+    </string-array>
+
+    <string-array name="source_filters">
+        <item>@string/filter_source_movies</item>
+        <item>@string/filter_source_tv</item>
+    </string-array>
+
+    <!-- Detail screen -->
+    <string name="overview_label">Overview</string>
+    <string name="videos_label">Videos</string>
+    <string name="rating_format">%.1f / 10</string>
+
+</resources>

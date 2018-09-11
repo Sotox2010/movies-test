@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/searchRecyclerView"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingTop="@dimen/movies_grid_padding_with_tabs"/>
+
+    <include layout="@layout/include_empty_view"/>
+
+    <android.support.design.widget.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+        <android.support.v7.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?actionBarSize"
+            app:navigationIcon="@drawable/ic_back_white_24dp"
+            android:background="@null">
+
+            <EditText
+                android:id="@+id/queryEditText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:background="@null"
+                android:gravity="center_vertical"
+                tools:text="Search query"
+                android:hint="Search for movies of tv-series"
+                android:textSize="18sp" />
+
+        </android.support.v7.widget.Toolbar>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:layout_marginStart="@dimen/keyline_content_start">
+
+            <Spinner
+                android:id="@+id/sourceSpinner"
+                android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+            <Spinner
+                android:id="@+id/categorySpinner"
+                android:popupTheme="@style/ThemeOverlay.AppCompat.Light"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_weight="1" />
+
+        </LinearLayout>
+
+    </android.support.design.widget.AppBarLayout>
+
+</FrameLayout>
