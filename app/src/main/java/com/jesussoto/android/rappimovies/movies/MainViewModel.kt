@@ -17,6 +17,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     // This should be preferably injected from outside;
     private val moviesRepository: MoviesRepository = MoviesRepository.getInstance(app)
 
+    // This should be preferably injected from outside;
     private val tvSeriesRepository: TvSeriesRepository = TvSeriesRepository.getInstance(app)
 
     // LiveData to keep track of the current source filter (tvSeries of tv-series)
@@ -34,24 +35,24 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     /**
      * Items cache for each source and category
      */
-    private val popularMoviesItemsCache = ArrayList<Movie>()
-    private val topRatedMoviesItemsCache = ArrayList<Movie>()
-    private val upcomingMoviesItemsCache = ArrayList<Movie>()
-    private val popularTvSeriesItemsCache = ArrayList<TvSeries>()
-    private val topRatedTvSeriesItemsCache = ArrayList<TvSeries>()
+    private var popularMoviesItemsCache = ArrayList<Movie>()
+    private var topRatedMoviesItemsCache = ArrayList<Movie>()
+    private var upcomingMoviesItemsCache = ArrayList<Movie>()
+    private var popularTvSeriesItemsCache = ArrayList<TvSeries>()
+    private var topRatedTvSeriesItemsCache = ArrayList<TvSeries>()
 
     internal val sourceFilter: SourceType?
         get() = sourceFilteringLiveData.value
 
     /**
-     *
+     * Start listening to the UIModel
      */
     internal fun getMainUiModel(): LiveData<MainUiModel> {
         return Transformations.map(sourceFilteringLiveData, this::constructMainUiModel)
     }
 
     /**
-     *
+     * Called when the view wants to load more data on the next page.
      */
     fun loadNextPage(source: SourceType, category: FilterType) {
         val data = getCurrentPageLiveData(source, category)
@@ -59,13 +60,17 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         data.value = value + 1
     }
 
+    /**
+     * Loads the initial data dor a gicen source and category.
+     */
     fun loadFirstPage(source: SourceType, category: FilterType) {
+        resetCache(source, category)
         val data = getCurrentPageLiveData(source, category)
         data.value = 1
     }
 
     /**
-     *
+     * Get eht current page LiveData given a source and category.
      */
     private fun getCurrentPageLiveData(source: SourceType, category: FilterType): MutableLiveData<Int> {
         return when(source) {
@@ -94,7 +99,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     }
 
     /**
-     *
+     * Set source filtering, which will trigger observables.
      */
     internal fun setSourceFiltering(source: SourceType) {
         if (sourceFilter != source) {
@@ -103,7 +108,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     }
 
     /**
-     *
+     * Get specific movie stream by filter.
      */
     private fun getMoviesByFilter(filter: FilterType, page: Int): LiveData<Resource<List<DisplayableItem>>> {
         val liveData = when (filter) {
@@ -116,7 +121,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     }
 
     /**
-     *
+     * Get specific tv-series stream by filter.
      */
     private fun getTvSeriesByFilter(filter: FilterType, page: Int): LiveData<Resource<List<DisplayableItem>>> {
         val resultData = when (filter) {
@@ -129,7 +134,7 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     }
 
     /**
-     *
+     * Get the correct string filtered firstly by source.
      */
     private fun getPaginatedItemsByFilter(source: SourceType, filter: FilterType, page: Int):
             LiveData<Resource<List<DisplayableItem>>> {
@@ -138,11 +143,40 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
             getMoviesByFilter(filter, page)
         else
             getTvSeriesByFilter(filter, page)
-
-        //return Transformations.map(moviesRepository.loadPopularMoviesByPage(page, popularMoviesItemsCache),
-          //      this::mapMoviesToDisplayableItems)
     }
 
+    /**
+     * Reset the cache for a given category to be empty.
+     */
+    private fun resetCache(source: SourceType, category: FilterType) {
+        if (source == SourceType.MOVIES) {
+            when (category) {
+                FilterType.POPULAR -> {
+                    popularMoviesItemsCache = ArrayList()
+                }
+                FilterType.TOP_RATED -> {
+                    topRatedMoviesItemsCache = ArrayList()
+                }
+                FilterType.UPCOMING -> {
+                    upcomingMoviesItemsCache = ArrayList()
+                }
+            }
+        } else {
+            when(category) {
+                FilterType.POPULAR -> {
+                    popularTvSeriesItemsCache = ArrayList()
+                }
+                FilterType.TOP_RATED -> {
+                    topRatedTvSeriesItemsCache = ArrayList()
+                }
+                else -> throw IllegalArgumentException()
+            }
+        }
+    }
+
+    /**
+     * Get the cache for the specified source type.
+     */
     fun getItemsCache(source: SourceType, category: FilterType): MutableList<DisplayableItem> {
         val itemsCache = when(source) {
             SourceType.MOVIES -> when(category) {
@@ -160,6 +194,9 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         return itemsCache.toMutableList()
     }
 
+    /**
+     * Map List<Movie> to List<DisplayableItem>
+     */
     private fun mapMoviesToDisplayableItems(resource: Resource<List<Movie>>):
             Resource<List<DisplayableItem>> {
 
@@ -171,6 +208,9 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
         return Resource(resource.status, items, resource.throwable)
     }
 
+    /**
+     * Map List<TvSeries> to List<DisplayableItem>
+     */
     private fun mapTvSeriesToDisplayableItems(resource: Resource<List<TvSeries>>):
             Resource<List<DisplayableItem>> {
 
@@ -183,14 +223,14 @@ class MainViewModel(app: Application): AndroidViewModel(app) {
     }
 
     /**
-     *
+     * Constructs ui model yo show the correct streams in the main activity.
      */
     private fun constructMainUiModel(sourceFiltering: SourceType): MainUiModel {
         return MainUiModel(sourceFiltering)
     }
 
     /**
-     *
+     * Builds details ui model to display in the UI.
      */
     private fun constructPaginatedItemsUiModel(result: Resource<List<DisplayableItem>>): PaginatedItemsUiModel {
         val items = result.data

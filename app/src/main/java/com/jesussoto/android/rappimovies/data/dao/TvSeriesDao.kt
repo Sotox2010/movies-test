@@ -52,4 +52,8 @@ interface TvSeriesDao {
 
     @Delete
     fun deleteTvSeries(tvSeries: TvSeries)
+
+    @Query("DELETE FROM tv_series WHERE category = :category;")
+    fun deleteTvSeriesByCategory(category: String)
+
 }

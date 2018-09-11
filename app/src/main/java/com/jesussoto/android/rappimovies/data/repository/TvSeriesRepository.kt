@@ -15,10 +15,12 @@ import com.jesussoto.android.rappimovies.data.AppDatabase
 import com.jesussoto.android.rappimovies.data.dao.TvSeriesDao
 import com.jesussoto.android.rappimovies.data.entity.TvSeries
 import com.jesussoto.android.rappimovies.movies.FilterType
+import com.jesussoto.android.rappimovies.util.Utils
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import java.util.*
 import java.util.concurrent.Executors
 
 class TvSeriesRepository(
@@ -42,6 +44,7 @@ class TvSeriesRepository(
     fun loadPopularTvSeriesByPage(page: Int, listCache: ArrayList<TvSeries>): LiveData<Resource<List<TvSeries>>> {
         val liveData = MutableLiveData<Resource<List<TvSeries>>>()
         val offset = (page - 1) * PAGE_SIZE
+        val category = "popular"
 
         val loadNextPageTask = object : LoadNextPageTask<TvSeries, TvSeriesResponse>(
                 liveData, offset, PAGE_SIZE, listCache) {
@@ -54,10 +57,22 @@ class TvSeriesRepository(
                 return service.getPopularTvSeries(page)
             }
 
-            override fun saveToDatabase(items: List<TvSeries>) = saveTvSeriesToDb(items)
+            override fun shouldFetch(prefetchItems: List<TvSeries>): Boolean {
+                var shouldFetch = false
+                if (page == 1 && !prefetchItems.isEmpty()) {
+                    val lastFreshFetch = prefetchItems[0].createdAt
+                    shouldFetch = Utils.isOlderThanOneHour(lastFreshFetch)
+                }
+                return shouldFetch
+            }
+
+            override fun saveToDatabase(newItems: List<TvSeries>, shouldReplace: Boolean) {
+                saveTvSeriesToDb(newItems, category, shouldReplace)
+            }
 
             override fun setCategory(item: TvSeries) {
-                item.category = "popular"
+                item.createdAt = Date()
+                item.category = category
             }
 
             override fun getResults(response: TvSeriesResponse): List<TvSeries> = response.results
@@ -74,6 +89,7 @@ class TvSeriesRepository(
     fun loadTopRatedTvSeriesByPage(page: Int, listCache: ArrayList<TvSeries>): LiveData<Resource<List<TvSeries>>> {
         val liveData = MutableLiveData<Resource<List<TvSeries>>>()
         val offset = (page - 1) * PAGE_SIZE
+        val category = "top-rated"
 
         val loadNextPageTask = object : LoadNextPageTask<TvSeries, TvSeriesResponse>(
                 liveData, offset, PAGE_SIZE, listCache) {
@@ -86,10 +102,22 @@ class TvSeriesRepository(
                 return service.getTopRatedTvSeries(page)
             }
 
-            override fun saveToDatabase(items: List<TvSeries>) = saveTvSeriesToDb(items)
+            override fun shouldFetch(prefetchItems: List<TvSeries>): Boolean {
+                var shouldFetch = false
+                if (page == 1 && !prefetchItems.isEmpty()) {
+                    val lastFreshFetch = prefetchItems[0].createdAt
+                    shouldFetch = Utils.isOlderThanOneHour(lastFreshFetch)
+                }
+                return shouldFetch
+            }
+
+            override fun saveToDatabase(newItems: List<TvSeries>, shouldReplace: Boolean) {
+                saveTvSeriesToDb(newItems, category, shouldReplace)
+            }
 
             override fun setCategory(item: TvSeries) {
-                item.category = "top-rated"
+                item.createdAt = Date()
+                item.category = category
             }
 
             override fun getResults(response: TvSeriesResponse): List<TvSeries> = response.results
@@ -103,9 +131,14 @@ class TvSeriesRepository(
     /**
      * Persist tv-series in the database as a caching mechanism.
      */
-    private fun saveTvSeriesToDb(tvSeriesList: List<TvSeries>) {
+    private fun saveTvSeriesToDb(tvSeries: List<TvSeries>, category: String, shouldReplace: Boolean) {
         database.runInTransaction {
-            tvSeriesDao.insertTvSeries(tvSeriesList)
+            database.runInTransaction {
+                if (shouldReplace) {
+                    tvSeriesDao.deleteTvSeriesByCategory(category)
+                }
+                tvSeriesDao.insertTvSeries(tvSeries)
+            }
         }
     }
 

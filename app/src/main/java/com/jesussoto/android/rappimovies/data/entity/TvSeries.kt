@@ -16,6 +16,9 @@ import java.util.*
 )
 data class TvSeries(
 
+    @field:ColumnInfo(name = "created_at")
+    var createdAt: Date = Date(),
+
     @field:SerializedName("id")
     @ColumnInfo(name = "id")
     val id: Long,
@@ -60,5 +63,6 @@ data class TvSeries(
     @ColumnInfo(name = "original_language")
     val originalLanguage: String,
 
+    @ColumnInfo(name = "category")
     var category: String = "popular"
 )

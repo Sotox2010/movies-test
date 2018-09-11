@@ -34,7 +34,7 @@ interface MovieDao {
         SELECT *
         FROM movie
         WHERE category = 'top-rated'
-        ORDER BY popularity DESC
+        ORDER BY vote_average DESC
         LIMIT :pageSize
         OFFSET :offset;
     """)
@@ -64,4 +64,7 @@ interface MovieDao {
 
     @Delete
     fun deleteMovie(movie: Movie)
+
+    @Query("DELETE FROM movie WHERE category = :category;")
+    fun deleteMovieByCategory(category: String)
 }

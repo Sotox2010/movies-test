@@ -16,6 +16,9 @@ import java.util.*
 )
 data class Movie(
 
+    @ColumnInfo(name = "created_at")
+    var createdAt: Date = Date(),
+
     @SerializedName("id")
     @ColumnInfo(name = "id")
     val id: Long,
@@ -64,6 +67,7 @@ data class Movie(
     @ColumnInfo(name = "original_title")
     val originalTitle: String,
 
+    @ColumnInfo(name = "category")
     var category: String = "popular"
 
 )

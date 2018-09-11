@@ -13,7 +13,7 @@ import com.jesussoto.android.rappimovies.R
 import com.jesussoto.android.rappimovies.moviedetail.ItemDetailActivity
 import com.jesussoto.android.rappimovies.util.DisplayableItem
 import com.jesussoto.android.rappimovies.widget.LoadMoreScrollListener
-import kotlinx.android.synthetic.main.fragment_movies.*
+import kotlinx.android.synthetic.main.fragment_paginated_items.*
 
 class PaginatedItemsFragment : Fragment() {
 
@@ -27,6 +27,8 @@ class PaginatedItemsFragment : Fragment() {
 
     private var loading = false
 
+    private var restoringData = false
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val args = arguments
@@ -39,7 +41,7 @@ class PaginatedItemsFragment : Fragment() {
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.fragment_movies, container, false)
+        return inflater.inflate(R.layout.fragment_paginated_items, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
@@ -65,19 +67,19 @@ class PaginatedItemsFragment : Fragment() {
     private fun bindViewModel(freshLaunch: Boolean) {
         viewModel = ViewModelProviders.of(requireActivity()).get(MainViewModel::class.java)
 
+        val restoringCache = viewModel.getItemsCache(source, category)
+        if (freshLaunch || restoringCache.isEmpty()) {
+            viewModel.loadFirstPage(source, category)
+        } else {
+            restoringData = true
+            adapter.replaceData(restoringCache)
+        }
+
         // Observe to changes in the ui model, every time the fetch status or the movie sourceFilter
         // changes, a new ui model will be emitted and the ui will be updated based on the new ui
         // model.
         viewModel.getPaginatedItemsUiModel(source, category)
                 .observe(this, Observer(this::updateView))
-
-
-        val restoringCache = viewModel.getItemsCache(source, category)
-        if (freshLaunch || restoringCache.isEmpty()) {
-            viewModel.loadFirstPage(source, category)
-        } else {
-            adapter.replaceData(restoringCache)
-        }
     }
 
     /**
@@ -98,7 +100,7 @@ class PaginatedItemsFragment : Fragment() {
      * Callback to trigger the loading of more items.
      */
     private fun onLoadMore() {
-        if (!loading) {
+        if (!loading && !restoringData) {
             loading = true
             viewModel.loadNextPage(source, category)
         }
@@ -116,11 +118,19 @@ class PaginatedItemsFragment : Fragment() {
             return
         }
 
+        if (restoringData) {
+            restoringData = false
+            return
+        }
+
         val progressVisibility = if (uiModel.isProgressVisible) View.VISIBLE else View.GONE
 
         adapter.appendData(uiModel.items ?: mutableListOf())
         progressContainer.visibility = progressVisibility
-        loading = false
+
+        if (!uiModel.isProgressVisible) {
+            loading = false
+        }
 
         if (uiModel.isErrorVisible) {
             Snackbar.make(progressContainer, "Error while retrieve items, check connection.",

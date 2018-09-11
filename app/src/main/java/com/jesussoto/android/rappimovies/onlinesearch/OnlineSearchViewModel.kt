@@ -56,7 +56,8 @@ class OnlineSearchViewModel(val app: Application) : AndroidViewModel(app) {
             .doOnNext { uiModel.postValue(constructUiModel(Resource.loading(null))) }
             .switchMap { params -> searchWithParams(params)
                                 .subscribeOn(Schedulers.computation())
-                                .onErrorResumeNext(Observable.empty())}
+                                .doOnError { uiModel.postValue(constructUiModel(Resource.error(it, null))) }
+                                .onErrorResumeNext(Observable.empty()) }
             .map { Resource.success(it) }
             .map(this::constructUiModel)
             .subscribeOn(Schedulers.computation())

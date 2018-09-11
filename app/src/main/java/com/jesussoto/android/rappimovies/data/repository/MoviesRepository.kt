@@ -15,10 +15,12 @@ import com.jesussoto.android.rappimovies.data.AppDatabase
 import com.jesussoto.android.rappimovies.data.dao.MovieDao
 import com.jesussoto.android.rappimovies.data.entity.Movie
 import com.jesussoto.android.rappimovies.movies.FilterType
+import com.jesussoto.android.rappimovies.util.Utils
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import java.util.*
 import java.util.concurrent.Executors
 
 class MoviesRepository(
@@ -44,6 +46,8 @@ class MoviesRepository(
     fun loadPopularMoviesByPage(page: Int, listCache: ArrayList<Movie>): LiveData<Resource<List<Movie>>> {
         val liveData = MutableLiveData<Resource<List<Movie>>>()
         val offset = (page - 1) * PAGE_SIZE
+        val category = "popular"
+
         val loadNextPageTask = object : LoadNextPageTask<Movie, MoviesResponse>(
                 liveData, offset, PAGE_SIZE, listCache) {
 
@@ -55,10 +59,22 @@ class MoviesRepository(
                 return service.getPopularMovies(page)
             }
 
-            override fun saveToDatabase(items: List<Movie>) = saveMoviesToDb(items)
+            override fun saveToDatabase(newItems: List<Movie>, shouldReplace: Boolean) {
+                saveMoviesToDb(newItems, category, shouldReplace)
+            }
+
+            override fun shouldFetch(prefetchItems: List<Movie>): Boolean {
+                var shouldFetch = false
+                if (page == 1 && !prefetchItems.isEmpty()) {
+                    val lastFreshFetch = prefetchItems[0].createdAt
+                    shouldFetch = Utils.isOlderThanOneHour(lastFreshFetch)
+                }
+                return shouldFetch
+            }
 
             override fun setCategory(item: Movie) {
-                item.category = "popular"
+                item.createdAt = Date()
+                item.category = category
             }
 
             override fun getResults(response: MoviesResponse): List<Movie> = response.results
@@ -77,6 +93,8 @@ class MoviesRepository(
     fun loadTopRatedMoviesByPage(page: Int, listCache: ArrayList<Movie>): LiveData<Resource<List<Movie>>> {
         val liveData = MutableLiveData<Resource<List<Movie>>>()
         val offset = (page - 1) * PAGE_SIZE
+        val category = "top-rated"
+
         val loadNextPageTask = object : LoadNextPageTask<Movie, MoviesResponse>(
                 liveData, offset, PAGE_SIZE, listCache) {
 
@@ -88,10 +106,22 @@ class MoviesRepository(
                 return service.getTopRatedMovies(page)
             }
 
-            override fun saveToDatabase(items: List<Movie>) = saveMoviesToDb(items)
+            override fun saveToDatabase(newItems: List<Movie>, shouldReplace: Boolean) {
+                saveMoviesToDb(newItems, category, shouldReplace)
+            }
+
+            override fun shouldFetch(prefetchItems: List<Movie>): Boolean {
+                var shouldFetch = false
+                if (page == 1 && !prefetchItems.isEmpty()) {
+                    val lastFreshFetch = prefetchItems[0].createdAt
+                    shouldFetch = Utils.isOlderThanOneHour(lastFreshFetch)
+                }
+                return shouldFetch
+            }
 
             override fun setCategory(item: Movie) {
-                item.category = "top-rated"
+                item.createdAt = Date()
+                item.category = category
             }
 
             override fun getResults(response: MoviesResponse): List<Movie> = response.results
@@ -110,6 +140,8 @@ class MoviesRepository(
     fun loadUpcomingMoviesByPage(page: Int, listCache: ArrayList<Movie>): LiveData<Resource<List<Movie>>> {
         val liveData = MutableLiveData<Resource<List<Movie>>>()
         val offset = (page - 1) * PAGE_SIZE
+        val category = "upcoming"
+
         val loadNextPageTask = object : LoadNextPageTask<Movie, MoviesResponse>(
                 liveData, offset, PAGE_SIZE, listCache) {
 
@@ -121,10 +153,22 @@ class MoviesRepository(
                 return service.getUpcomingMovies(page)
             }
 
-            override fun saveToDatabase(items: List<Movie>) = saveMoviesToDb(items)
+            override fun saveToDatabase(newItems: List<Movie>, shouldReplace: Boolean) {
+                saveMoviesToDb(newItems, category, shouldReplace)
+            }
+
+            override fun shouldFetch(prefetchItems: List<Movie>): Boolean {
+                var shouldFetch = false
+                if (page == 1 && !prefetchItems.isEmpty()) {
+                    val lastFreshFetch = prefetchItems[0].createdAt
+                    shouldFetch = Utils.isOlderThanOneHour(lastFreshFetch)
+                }
+                return shouldFetch
+            }
 
             override fun setCategory(item: Movie) {
-                item.category = "upcoming"
+                item.createdAt = Date()
+                item.category = category
             }
 
             override fun getResults(response: MoviesResponse): List<Movie> = response.results
@@ -137,8 +181,11 @@ class MoviesRepository(
    /**
     * Persist the list of movies to the database so they are available offline.
     */
-    private fun saveMoviesToDb(movies: List<Movie>) {
+    private fun saveMoviesToDb(movies: List<Movie>, category: String, shouldReplace: Boolean) {
         database.runInTransaction {
+            if (shouldReplace) {
+                moviesDao.deleteMovieByCategory(category)
+            }
             moviesDao.insertMovies(movies)
         }
     }

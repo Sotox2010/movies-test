@@ -122,6 +122,7 @@ class ItemDetailActivity : AppCompatActivity(), SynchronizedScrollView.OnScrollL
         }
 
         setSupportActionBar(toolbar)
+        toolbar.setNavigationOnClickListener { finish() }
 
         val actionBar = supportActionBar
         if (actionBar != null) {
@@ -284,21 +285,24 @@ class ItemDetailActivity : AppCompatActivity(), SynchronizedScrollView.OnScrollL
     // Custom Picasso target to be able to receive the poster bitmap for further color processing
     // using the Palette API.
     private val posterTarget = object : Target {
-        override fun onBitmapLoaded(bitmap: Bitmap, from: Picasso.LoadedFrom) {
-            posterView.setImageBitmap(bitmap)
-            Palette.from(bitmap).generate(this@ItemDetailActivity::onPaletteGenerated)
+        override fun onBitmapLoaded(bitmap: Bitmap?, from: Picasso.LoadedFrom?) {
+            if (bitmap != null) {
+                posterView.setImageBitmap(bitmap)
+                Palette.from(bitmap).generate(this@ItemDetailActivity::onPaletteGenerated)
+            }
         }
 
-        override fun onBitmapFailed(errorDrawable: Drawable) {
+        override fun onBitmapFailed(errorDrawable: Drawable?) {
 
         }
 
-        override fun onPrepareLoad(placeHolderDrawable: Drawable) {
-
+        override fun onPrepareLoad(placeHolderDrawable: Drawable?) {
+            posterView.setImageDrawable(placeHolderDrawable)
         }
     }
 
-    /**
+
+        /**
      * Wrapper class around a video list item view to abstract its methods.
      */
     internal class VideoItemViewHolder(val itemView: View) {

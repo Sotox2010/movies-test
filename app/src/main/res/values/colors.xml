@@ -5,7 +5,7 @@
     <color name="white">#ffffffff</color>
     <color name="black">#ff000000</color>
 
-    <color name="window_background">#fafafa</color> <!-- grey 50 -->
+    <color name="window_background">#303030</color> <!-- grey 50 -->
     <color name="card">@color/white</color>
 
     <!-- App palette -->

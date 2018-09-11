@@ -118,7 +118,8 @@
                     android:paddingTop="@dimen/spacing_large"
                     android:paddingBottom="@dimen/spacing_large"
                     android:paddingStart="@dimen/keyline_margin"
-                    android:paddingEnd="@dimen/keyline_margin">
+                    android:paddingEnd="@dimen/keyline_margin"
+                    android:background="@color/window_background">
 
                     <TextView
                         android:id="@+id/overviewLabel"

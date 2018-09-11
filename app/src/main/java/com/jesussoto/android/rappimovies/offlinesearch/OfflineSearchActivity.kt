@@ -7,6 +7,7 @@ import android.support.v4.app.FragmentActivity
 import android.support.v7.app.AppCompatActivity
 import android.support.v7.widget.GridLayoutManager
 import android.text.Editable
+import android.text.TextUtils
 import android.text.TextWatcher
 import android.view.View
 import android.view.ViewGroup
@@ -104,6 +105,7 @@ class OfflineSearchActivity: AppCompatActivity() {
         setSupportActionBar(toolbar)
         toolbar.post { toolbar.title = null }
         queryEditText.addTextChangedListener(textChangedListener)
+        clearButton.setOnClickListener { queryEditText.text = null }
     }
 
     private fun setupToolbarSpinners() {
@@ -189,6 +191,7 @@ class OfflineSearchActivity: AppCompatActivity() {
     private val textChangedListener = object : TextWatcher {
         override fun afterTextChanged(s: Editable?) {
             viewModel.setSearchQuery(s.toString())
+            clearButton.visibility = if (TextUtils.isEmpty(s)) View.GONE else View.VISIBLE
         }
 
         override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {

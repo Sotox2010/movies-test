@@ -25,15 +25,36 @@
             app:navigationIcon="@drawable/ic_back_white_24dp"
             android:background="@null">
 
-            <EditText
-                android:id="@+id/queryEditText"
+            <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent"
-                android:background="@null"
-                android:gravity="center_vertical"
-                tools:text="Search query"
-                android:hint="Search for movies of tv-series"
-                android:textSize="18sp" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <EditText
+                    android:id="@+id/queryEditText"
+                    android:layout_width="0dp"
+                    android:layout_height="match_parent"
+                    android:layout_weight="1"
+                    android:background="@null"
+                    android:gravity="center_vertical"
+                    tools:text="Search query"
+                    android:hint="Search for movies of tv-series"
+                    android:textSize="18sp"
+                    android:inputType="text" />
+
+                <ImageView
+                    android:id="@+id/clearButton"
+                    android:layout_width="?actionBarSize"
+                    android:layout_height="?actionBarSize"
+                    android:scaleType="center"
+                    android:background="?actionBarItemBackground"
+                    android:src="@drawable/ic_close_white_24dp"
+                    android:visibility="gone"
+                    tools:visibility="visible"
+                    android:contentDescription="Clear search" />
+
+            </LinearLayout>
 
         </android.support.v7.widget.Toolbar>
 

@@ -24,8 +24,7 @@
 
         <activity
             android:name=".moviedetail.ItemDetailActivity"
-            android:theme="@style/Theme.PopularMovies.MovieDetail"
-            android:parentActivityName=".movies.MainActivity"/>
+            android:theme="@style/Theme.PopularMovies.MovieDetail"/>
 
         <activity
             android:name=".offlinesearch.OfflineSearchActivity"

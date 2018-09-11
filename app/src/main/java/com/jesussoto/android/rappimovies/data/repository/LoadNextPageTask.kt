@@ -20,27 +20,31 @@ abstract class LoadNextPageTask<T, ResponseType>(
 
     abstract fun getServiceSingleCall(): Single<ResponseType>
 
-    abstract fun saveToDatabase(items: List<T>)
+    abstract fun saveToDatabase(newItems: List<T>, shouldReplace: Boolean)
 
     abstract fun setCategory(item: T)
 
     abstract fun getResults(response: ResponseType): List<T>
 
-    override fun run() {
-        val items = getItemsByPage(offset, pageSize)
+    abstract fun shouldFetch(prefetchItems: List<T>): Boolean
 
-        if (items.size == pageSize) {
+    override fun run() {
+        // Emit 'loading' status.
+        liveData.postValue(Resource.loading(null))
+
+        val items = getItemsByPage(offset, pageSize)
+        val shouldFetch = shouldFetch(items)
+
+        if (!items.isEmpty() && !shouldFetch) {
             itemsCache.addAll(items)
             liveData.postValue(Resource.success(items))
         } else {
-            // service.getPopularMovies(page)
             getServiceSingleCall()
-                    .doOnSubscribe { liveData.postValue(Resource.loading(null)) }
                     .map(this::getResults)
                     .flatMapObservable { Observable.fromIterable(it) }
                     .doOnNext { item -> setCategory(item) }
                     .toList()
-                    .doOnSuccess(this::saveToDatabase)
+                    .doOnSuccess { saveToDatabase(it, shouldFetch) }
                     .subscribeOn(Schedulers.computation())
                     .observeOn(Schedulers.computation())
                     .subscribe(
@@ -49,8 +53,17 @@ abstract class LoadNextPageTask<T, ResponseType>(
                                 itemsCache.addAll(it)
                             },
                             // onError
-                            { liveData.postValue(Resource.error(it, null)) }
+                            { handleError(it, items, shouldFetch) }
                     )
         }
+    }
+
+    private fun handleError(t : Throwable, prefetchItems: List<T>, shouldFetch: Boolean) {
+        if (shouldFetch && !prefetchItems.isEmpty()) {
+            liveData.postValue(Resource.success(prefetchItems))
+            return
+        }
+
+        liveData.postValue(Resource.error(t, null))
     }
 }
