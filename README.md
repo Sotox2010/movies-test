@@ -1,3 +1,22 @@
+## Detalles de la prueba
+
+La App tiene las siguientes funciones:
+
+- Listar películas y series por las 3 categorias sugeridas, con paginación y backup en la base de datos para funcionamiento offline.
+- Búsqueda local (offline) por categorías que solo considera los elementos al momento en la base de datos.
+- Búsqueda online con filtro entre películas o series.
+- Vista de detalle de las películas y series.
+- Listado de videos dentro del detalle de cada elemento con posibilidad de abrirlos en la App de YouTube o el navegador.
+- La información en base de datos se invalida cada 60 minutos, es decir, al transcurrir ese tiempo, se volveran a cargar los elementos desde la red (siempre y cuadno exista conexión, de otro modo se mostrará la información en cache).
+
+## Descarga
+
+El siguiente es el link de descarga del APK en formato debug: [Descargar APK](https://www.dropbox.com/s/wif1e7cpluro8ku/app-debug.apk?dl=0)
+
+## Capturas: 
+- [Captura #1](https://www.dropbox.com/s/9h3qiggs6jfsetp/device-2018-09-11-143558.png)
+- [Captura #2](https://www.dropbox.com/s/5q6249qjyjdmpk5/device-2018-09-11-143639.png)
+
 ## Arquitectura
 
 Para esta prueba, he utilizado la arquitectura **_Model-View-ViewModel_** (MVVM).
@@ -29,20 +48,20 @@ Detallo las clases más relevantes del proyecto:
 
 - `WebService`: Encapsula todos los metodos para la comunicacion con el servicio web.
 
-- `MoviesRepository`: Obtiene y almacena en cache la información de películas, individual o e forma paginada.
+- `MoviesRepository`: Obtiene y almacena en cache la información de películas, individual o de forma paginada. Esta información puede provenir tanto de la base de datos como el servicio Web.
 
-- `TvSeriesRepository`: Obtiene y almacena en cache la información de series de TV, , individual o e forma paginada.
+- `TvSeriesRepository`: Obtiene y almacena en cache la información de series de TV, individual o de forma paginada. Al igual que el `MoviesRepository`, la información puede provenir de la base de datos o del servicio Web.
 
 - `MainViewModel`: Obtiene las datos de las distintas categorias y las prepara para
-el UI, tambien llega el control de la paginación y restauración de estado.
+el UI, también llega el control de la paginación y restauración de estado.
 
 - `ItemDetailViewModel`: Recolecta los datos de alguna película o serie para mostrar
 al usuario, incluyendo los videos relacionados.
 
-- `OfflineSearchViewModel`: obtiene películas y series desde la base de datos local
+- `OfflineSearchViewModel`: Obtiene películas y series desde la base de datos local
 (usando los repositorios) basado en la busqueda realizada por el usuario, al igual que se encarga del manejo de errores.
 
-- `OfflineSearchViewModel`: obtiene películas y series desde el servicio web
+- `OfflineSearchViewModel`: Obtiene películas y series desde el servicio web
 (usando los repositorios) basado en la busqueda realizada por el usuario, al igual que se encarga del manejo de errores.
 
 - `MainActivity`: Ordena los distintos fragments que representan las categorias,
@@ -57,28 +76,27 @@ realizar la busqueda con los parametros especificados.
 
 ## Principio de Responsabilidad Única (SRP):
 
-Este principio, llamado SRP en inglés, es el primero de los principios SOLID y pregona
+Este principio, llamado SRP en inglés, es el primero de los principios **_SOLID_** y pregona
 que una clase sólo debe tener una única responsabilidad y una única razón para
 que esta deba cambiar (basado en su responsabilidad). Al una clase tener una única
 responsabilidad, es mucho más mantenible y fácil de explicar y entender, y al
-entenderla mejor, reduce sustancualmente el numero de posibles bugs y efectos
+entenderla mejor, reduce sustancialmente el número de posibles bugs y efectos
 colaterales que puedan ocurrir al modificar la clase. En resumen, el correcto
-uso de esto reduce las probabilidades de bugs, y facilita su mantenimiento y
-extensión.
+uso de este principio reduce las probabilidades de bugs, y facilita el mantenimiento y
+extensión de funciones.
 
-
-## Principios de código:
+## Características de un buen de código:
 
 - Estilo coherente siguiendo normas internacionales.
-- Escrito de manera de que cualquiera pueda entenderlo, no solo quien lo escribe, debe ser claro y consiso, con buenos nombres de metodos, clases, variables, etc.
+- Escrito de manera de que cualquiera pueda entenderlo, no solo quien lo escribe, debe ser claro y consiso, con buenos nombres de metodos, clases, variables, etc, y con responsabilidades bien definidas.
 - Comentado cuidadosamente siempre que sea necesario para mejorar la mantenibilidad y el paso de información entre el equipo.
 - Que siga en lo posible los principios SOLID, con una arquitectura bien definida y conocida que permita extender fácilmente.
-- Testeable: modular y conciso de manera que permite escribir test unitarios para cada pequeña función preferiblemente siguiendo el proncipio de inversión de control (IoC).
-
+- Testeable: modular y conciso de manera que permite escribir test unitarios para cada pequeña función preferiblemente siguiendo el principio de inversión de control (IoC).
 
 ## Lo que hubiese hecho con más tiempo:
 
 - Dagger para injeccion de dependencias.
 - Manejo de errores más detallado.
-- Pruebas unitarias: a pesar de que no hay ninguna actualmente, el código está muy bien modularizado y pensado para prubarlo fácil y extensivamente.
+- Pruebas unitarias: a pesar de que no hay ninguna actualmente, el código está muy bien modularizado y pensado para probarlo fácil y extensivamente.
 - Un buen ícono para el launcher.
+- Más animaciones.
