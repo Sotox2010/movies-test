@@ -50,11 +50,11 @@ data class Movie(
 
     @SerializedName("poster_path")
     @ColumnInfo(name = "poster_path")
-    val posterPath: String,
+    val posterPath: String?,
 
     @SerializedName("backdrop_path")
     @ColumnInfo(name = "backdrop_path")
-    val backdropPath: String,
+    val backdropPath: String?,
 
     @SerializedName("original_language")
     @ColumnInfo(name = "original_language")

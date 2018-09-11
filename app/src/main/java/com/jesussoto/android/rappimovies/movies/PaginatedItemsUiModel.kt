@@ -2,7 +2,7 @@ package com.jesussoto.android.rappimovies.movies
 
 import com.jesussoto.android.rappimovies.util.DisplayableItem
 
-internal class ItemsUiModel(
+internal class PaginatedItemsUiModel(
 
     val items: List<DisplayableItem>?,
 

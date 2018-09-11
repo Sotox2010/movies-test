@@ -3,6 +3,7 @@ package com.jesussoto.android.rappimovies.movies
 import android.arch.lifecycle.Observer
 import android.arch.lifecycle.ViewModelProviders
 import android.os.Bundle
+import android.support.design.widget.Snackbar
 import android.support.v4.app.Fragment
 import android.support.v7.widget.GridLayoutManager
 import android.view.LayoutInflater
@@ -11,17 +12,20 @@ import android.view.ViewGroup
 import com.jesussoto.android.rappimovies.R
 import com.jesussoto.android.rappimovies.moviedetail.ItemDetailActivity
 import com.jesussoto.android.rappimovies.util.DisplayableItem
+import com.jesussoto.android.rappimovies.widget.LoadMoreScrollListener
 import kotlinx.android.synthetic.main.fragment_movies.*
 
-class ItemsFragment : Fragment() {
+class PaginatedItemsFragment : Fragment() {
 
-    private lateinit var adapter: ItemsAdapter
+    private lateinit var adapter: PaginatedItemsAdapter
 
     private lateinit var viewModel: MainViewModel
 
     private lateinit var source: SourceType
 
     private lateinit var category: FilterType
+
+    private var loading = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -41,24 +45,39 @@ class ItemsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         setupRecyclerView()
-        emptyAction.setOnClickListener { viewModel.refreshMovies() }
+        //emptyAction.setOnClickListener { viewModel.refreshMovies() }
     }
 
     override fun onActivityCreated(savedInstanceState: Bundle?) {
         super.onActivityCreated(savedInstanceState)
-        bindViewModel()
+        bindViewModel(savedInstanceState == null)
+        loading = savedInstanceState?.getBoolean(STATE_LOADING, false) ?: false
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        outState.putBoolean(STATE_LOADING, loading);
     }
 
     /**
      * Bind to the view model to react to data changes.
      */
-    private fun bindViewModel() {
+    private fun bindViewModel(freshLaunch: Boolean) {
         viewModel = ViewModelProviders.of(requireActivity()).get(MainViewModel::class.java)
 
         // Observe to changes in the ui model, every time the fetch status or the movie sourceFilter
         // changes, a new ui model will be emitted and the ui will be updated based on the new ui
         // model.
-        viewModel.getItemsUiModel(source, category).observe(this, Observer(this::updateView))
+        viewModel.getPaginatedItemsUiModel(source, category)
+                .observe(this, Observer(this::updateView))
+
+
+        val restoringCache = viewModel.getItemsCache(source, category)
+        if (freshLaunch || restoringCache.isEmpty()) {
+            viewModel.loadFirstPage(source, category)
+        } else {
+            adapter.replaceData(restoringCache)
+        }
     }
 
     /**
@@ -67,12 +86,24 @@ class ItemsFragment : Fragment() {
     private fun setupRecyclerView() {
         val spanCount = resources.getInteger(R.integer.movie_grid_span_count)
 
-        adapter = ItemsAdapter(null)
+        adapter = PaginatedItemsAdapter(mutableListOf())
         adapter.setOnItemTappedListener(this::navigateToMovieDetail)
 
         moviesRecyclerView.layoutManager = GridLayoutManager(requireActivity(), spanCount)
         moviesRecyclerView.adapter = adapter
+        moviesRecyclerView.addOnScrollListener(LoadMoreScrollListener(this::onLoadMore))
     }
+
+    /**
+     * Callback to trigger the loading of more items.
+     */
+    private fun onLoadMore() {
+        if (!loading) {
+            loading = true
+            viewModel.loadNextPage(source, category)
+        }
+    }
+
 
     /**
      * Updates the view based on the UiModel state, this gets called each time new data is
@@ -80,19 +111,21 @@ class ItemsFragment : Fragment() {
      *
      * @param uiModel with all the data to display in the UI.
      */
-    private fun updateView(uiModel: ItemsUiModel?) {
+    private fun updateView(uiModel: PaginatedItemsUiModel?) {
         if (uiModel == null) {
             return
         }
 
-        val listVisibility = if (uiModel.items == null) View.GONE else View.VISIBLE
         val progressVisibility = if (uiModel.isProgressVisible) View.VISIBLE else View.GONE
-        val errorVisibility = if (uiModel.isErrorVisible) View.VISIBLE else View.GONE
 
-        adapter.replaceData(uiModel.items)
-        moviesRecyclerView.visibility = listVisibility
-        progress.visibility = progressVisibility
-        emptyContainer.visibility = errorVisibility
+        adapter.appendData(uiModel.items ?: mutableListOf())
+        progressContainer.visibility = progressVisibility
+        loading = false
+
+        if (uiModel.isErrorVisible) {
+            Snackbar.make(progressContainer, "Error while retrieve items, check connection.",
+                    Snackbar.LENGTH_LONG).show()
+        }
     }
 
     /**
@@ -105,17 +138,19 @@ class ItemsFragment : Fragment() {
     }
 
     companion object {
+        private const val STATE_LOADING = "state_loading"
+
         private const val ARG_SOURCE = "arg_source"
         private const val ARG_CATEGORY = "arg_category"
 
         @JvmStatic
-        internal fun newInstance(source: SourceType, category: FilterType): ItemsFragment {
+        internal fun newInstance(source: SourceType, category: FilterType): PaginatedItemsFragment {
             val args = Bundle().apply {
                 putInt(ARG_SOURCE, source.value)
                 putInt(ARG_CATEGORY, category.value)
             }
 
-            return ItemsFragment().apply {
+            return PaginatedItemsFragment().apply {
                 arguments = args
             }
         }

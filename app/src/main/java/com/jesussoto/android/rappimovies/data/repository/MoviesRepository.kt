@@ -15,25 +15,16 @@ import com.jesussoto.android.rappimovies.data.AppDatabase
 import com.jesussoto.android.rappimovies.data.dao.MovieDao
 import com.jesussoto.android.rappimovies.data.entity.Movie
 import com.jesussoto.android.rappimovies.movies.FilterType
-import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.Executors
 
 class MoviesRepository(
         private val service: WebService,
         private val database: AppDatabase,
         private val moviesDao: MovieDao) {
-
-    // Simple in-memory cache for popular tvSeries.
-    private val popularMoviesLiveData: MutableLiveData<Resource<List<Movie>>> = MutableLiveData()
-
-    // Simple in-memory cache for top rated tvSeries.
-    private val topRatedMoviesLiveData: MutableLiveData<Resource<List<Movie>>> = MutableLiveData()
-
-    // Simple in-memory cache for upcoming tvSeries.
-    private val upcomingMoviesLiveData: MutableLiveData<Resource<List<Movie>>> = MutableLiveData()
 
     // Simple in-memory cache for videos.
     private val videosLiveData: MutableLiveData<Resource<List<Video>>> = MutableLiveData()
@@ -41,158 +32,126 @@ class MoviesRepository(
     // 5MiB cache for videos.
     private val videosCache = LruCache<Long, Resource<List<Video>>>(5 * 1024 * 1024)
 
+    // Executor to move off the Ui thread.
+    private val ioExecutor = Executors.newFixedThreadPool(3)
+
     /**
-     * Load top-rated tvSeries from the network if no previous fetch occurred, or return the
+     * Load most popular movies from the network if no previous fetch occurred, or return the
      * cached tvSeries.
      *
-     * @return [LiveData] with the result of the most popular tvSeries network fetch.
+     * @return [LiveData] with the result of the most popular movies network fetch by page.
      */
-    fun loadPopularMovies(): LiveData<Resource<List<Movie>>> {
-        Single.concat(moviesDao.getPopularMovies(), fetchPopularMovies())
-                .doOnSubscribe { popularMoviesLiveData.postValue(Resource.loading(null)) }
-                .filter { !it.isEmpty() }
-                .firstOrError()
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.computation())
-                .subscribe(
-                        // onSuccess
-                        { popularMoviesLiveData.postValue(Resource.success(it)) },
+    fun loadPopularMoviesByPage(page: Int, listCache: ArrayList<Movie>): LiveData<Resource<List<Movie>>> {
+        val liveData = MutableLiveData<Resource<List<Movie>>>()
+        val offset = (page - 1) * PAGE_SIZE
+        val loadNextPageTask = object : LoadNextPageTask<Movie, MoviesResponse>(
+                liveData, offset, PAGE_SIZE, listCache) {
 
-                        //onError
-                        { popularMoviesLiveData.postValue(Resource.error(it, null)) }
-                )
+            override fun getItemsByPage(offset: Int, pageSize: Int): List<Movie> {
+                return moviesDao.getPopularMoviesByPage(offset, pageSize)
+            }
 
-        return popularMoviesLiveData
+            override fun getServiceSingleCall(): Single<MoviesResponse> {
+                return service.getPopularMovies(page)
+            }
+
+            override fun saveToDatabase(items: List<Movie>) = saveMoviesToDb(items)
+
+            override fun setCategory(item: Movie) {
+                item.category = "popular"
+            }
+
+            override fun getResults(response: MoviesResponse): List<Movie> = response.results
+        }
+
+        ioExecutor.execute(loadNextPageTask)
+        return liveData
     }
 
     /**
-     * Load top-rated tvSeries from the network if no previous fetch occurred, or return the
+     * Load top-rated movies from the network if no previous fetch occurred, or return the
      * cached tvSeries.
      *
-     * @return [LiveData] with the result of the top-rated tvSeries network fetch.
+     * @return [LiveData] with the result of the top-rated movies network fetch by page.
      */
-    fun loadTopRatedMovies(): LiveData<Resource<List<Movie>>> {
-        Single.concat(moviesDao.getTopRatedMovies(), fetchTopRatedMovies())
-                .doOnSubscribe { topRatedMoviesLiveData.postValue(Resource.loading(null)) }
-                .filter { !it.isEmpty() }
-                .firstOrError()
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.computation())
-                .subscribe(
-                        // onSuccess
-                        { topRatedMoviesLiveData.postValue(Resource.success(it)) },
+    fun loadTopRatedMoviesByPage(page: Int, listCache: ArrayList<Movie>): LiveData<Resource<List<Movie>>> {
+        val liveData = MutableLiveData<Resource<List<Movie>>>()
+        val offset = (page - 1) * PAGE_SIZE
+        val loadNextPageTask = object : LoadNextPageTask<Movie, MoviesResponse>(
+                liveData, offset, PAGE_SIZE, listCache) {
 
-                        //onError
-                        { topRatedMoviesLiveData.postValue(Resource.error(it, null)) }
-                )
+            override fun getItemsByPage(offset: Int, pageSize: Int): List<Movie> {
+                return moviesDao.getTopRatedMoviesByPage(offset, pageSize)
+            }
 
-        return topRatedMoviesLiveData
+            override fun getServiceSingleCall(): Single<MoviesResponse> {
+                return service.getTopRatedMovies(page)
+            }
+
+            override fun saveToDatabase(items: List<Movie>) = saveMoviesToDb(items)
+
+            override fun setCategory(item: Movie) {
+                item.category = "top-rated"
+            }
+
+            override fun getResults(response: MoviesResponse): List<Movie> = response.results
+        }
+
+        ioExecutor.execute(loadNextPageTask)
+        return liveData
     }
 
     /**
-     * Load top-rated tvSeries from the network if no previous fetch occurred, or return the
-     * cached tvSeries.
+     * Load upcoming movies from the network if no previous fetch occurred, or return the
+     * cached movies.
      *
-     * @return [LiveData] with the result of the top-rated tvSeries network fetch.
+     * @return [LiveData] with the result of the upcoming movies network fetch by page.
      */
-    fun loadUpcomingMovies(): LiveData<Resource<List<Movie>>> {
-        Single.concat(moviesDao.getUpcomingMovies(), fetchUpcomingMovies())
-                .filter { !it.isEmpty() }
-                .firstOrError()
-                .doOnSubscribe { upcomingMoviesLiveData.postValue(Resource.loading(null)) }
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.computation())
-                .subscribe(
-                        // onSuccess
-                        { upcomingMoviesLiveData.postValue(Resource.success(it)) },
+    fun loadUpcomingMoviesByPage(page: Int, listCache: ArrayList<Movie>): LiveData<Resource<List<Movie>>> {
+        val liveData = MutableLiveData<Resource<List<Movie>>>()
+        val offset = (page - 1) * PAGE_SIZE
+        val loadNextPageTask = object : LoadNextPageTask<Movie, MoviesResponse>(
+                liveData, offset, PAGE_SIZE, listCache) {
 
-                        //onError
-                        { upcomingMoviesLiveData.postValue(Resource.error(it, null)) }
-                )
+            override fun getItemsByPage(offset: Int, pageSize: Int): List<Movie> {
+                return moviesDao.getUpcomingMoviesByPage(offset, pageSize)
+            }
 
-        return upcomingMoviesLiveData
+            override fun getServiceSingleCall(): Single<MoviesResponse> {
+                return service.getUpcomingMovies(page)
+            }
+
+            override fun saveToDatabase(items: List<Movie>) = saveMoviesToDb(items)
+
+            override fun setCategory(item: Movie) {
+                item.category = "upcoming"
+            }
+
+            override fun getResults(response: MoviesResponse): List<Movie> = response.results
+        }
+
+        ioExecutor.execute(loadNextPageTask)
+        return liveData
     }
 
-    /**
-     * Forces refresh of the popular tvSeries from network.
-     */
-    /*fun refreshPopularMovies() {
-        fetchPopularMovies(popularMoviesLiveData)
-    }
-
-    /**
-     * Forces refresh of the top-rated tvSeries from network.
-     */
-    fun refreshTopRatedMovies() {
-        fetchTopRatedMovies(topRatedMoviesLiveData)
-    }*/
-
-    /**
-     * Core method for fetch popular tvSeries from the network using RxJava, placed on a separate
-     * method for re-usability on first load or forced refresh.
-     */
-    private fun fetchPopularMovies(): Single<List<Movie>> {
-        return service.getPopularMovies()
-                .map(MoviesResponse::results)
-                .flatMapObservable { Observable.fromIterable(it) }
-                .doOnNext { it.category = "popular" }
-                .toList()
-                .flatMapCompletable(this::saveMovies)
-                .andThen(moviesDao.getPopularMovies())
-    }
-
-    /**
-     * Core method for fetch top-rated tvSeries from the network using RxJava, placed on a separate
-     * method for re-usability on first load or forced refresh.
-     */
-    private fun fetchTopRatedMovies(): Single<List<Movie>> {
-        return service.getTopRatedMovies()
-                .map(MoviesResponse::results)
-                .flatMapObservable { Observable.fromIterable(it) }
-                .doOnNext { it.category = "top-rated" }
-                .toList()
-                .flatMapCompletable(this::saveMovies)
-                .andThen(moviesDao.getTopRatedMovies())
-    }
-
-    /**
-     * Core method for fetch upcoming tvSeries from the network using RxJava, placed on a separate
-     * method for re-usability on first load or forced refresh.
-     */
-    private fun fetchUpcomingMovies(): Single<List<Movie>> {
-        return service.getUpcomingMovies()
-                .map(MoviesResponse::results)
-                .flatMapObservable { Observable.fromIterable(it) }
-                .doOnNext { it.category = "upcoming" }
-                .toList()
-                .flatMapCompletable(this::saveMovies)
-                .andThen(moviesDao.getUpcomingMovies())
-    }
-
-    /**
-     * Persist the list of movies to the database so they are available offline.
-     */
-    private fun saveMovies(movies: List<Movie>): Completable {
-        return Completable.fromAction {
-//            database.beginTransaction()
-//            try {
-                moviesDao.insertMovies(movies)
-//                database.setTransactionSuccessful()
-//            } catch (ex: Exception) {
-//                database.endTransaction()
-//            }
+   /**
+    * Persist the list of movies to the database so they are available offline.
+    */
+    private fun saveMoviesToDb(movies: List<Movie>) {
+        database.runInTransaction {
+            moviesDao.insertMovies(movies)
         }
     }
 
     /**
-     *
+     * Load a single movie by its id.
      */
     fun loadMovieById(movieId: Long): Single<Movie> {
         return moviesDao.getMovieById(movieId)
     }
 
     /**
-     *
+     * Search in the local database for matching movies by title.
      */
     fun searchByNameAndCategory(query: String, category: FilterType): Flowable<List<Movie>> {
         val categoryString = when (category) {
@@ -209,7 +168,7 @@ class MoviesRepository(
     }
 
     /**
-     *
+     * Search movies from the network using TheMovieDB web service, filtering them by title.
      */
     fun searchRemotelyByName(query: String): Observable<List<Movie>> {
         return service.searchMovies(query)
@@ -217,7 +176,7 @@ class MoviesRepository(
     }
 
     /**
-     *
+     * Fetch videos for a specific movie by id.
      */
     fun loadVideosByMovieId(movieId: Long): LiveData<Resource<List<Video>>>{
         val cachedResource = videosCache.get(movieId)
@@ -244,6 +203,7 @@ class MoviesRepository(
     }
 
     companion object {
+        private const val PAGE_SIZE = 20
 
         @Volatile
         private var sInstance: MoviesRepository? = null

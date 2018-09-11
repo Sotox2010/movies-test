@@ -3,6 +3,7 @@
 
     <string name="error_connection">There was an error while retrieving movies. Check your connection and try again.</string>
     <string name="retry">Retry</string>
+    <string name="loading">Loading…</string>
 
     <string name="filter_source_movies">Movies</string>
     <string name="filter_source_tv">TV Series</string>
@@ -26,5 +27,8 @@
     <string name="overview_label">Overview</string>
     <string name="videos_label">Videos</string>
     <string name="rating_format">%.1f / 10</string>
+
+    <string name="search_offline">Search locally</string>
+    <string name="search_online">Search online</string>
 
 </resources>

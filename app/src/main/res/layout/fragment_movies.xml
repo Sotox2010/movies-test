@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    tools:context=".movies.MoviesFragment">
+    android:layout_height="match_parent">
 
     <android.support.v7.widget.RecyclerView
         android:id="@+id/moviesRecyclerView"
@@ -17,41 +15,33 @@
         android:clipToPadding="false"
         android:clipChildren="false" />
 
-    <ProgressBar
-        android:id="@+id/progress"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:visibility="gone"/>
-
-    <!-- This should be replaced later with a ViewStub for better performance -->
     <LinearLayout
-        android:id="@+id/emptyContainer"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginLeft="48dp"
-        android:layout_marginRight="48dp"
-        android:layout_gravity="center"
-        android:gravity="center_horizontal"
-        android:orientation="vertical"
+        android:id="@+id/progressContainer"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:orientation="horizontal"
+        android:layout_gravity="bottom"
+        android:gravity="center_vertical"
+        android:paddingStart="@dimen/spacing_large"
+        android:paddingEnd="@dimen/spacing_large"
+        android:background="?colorPrimary"
         android:visibility="gone"
         tools:visibility="visible">
 
-        <TextView
-            style="@style/TextAppearance.Body1"
-            android:id="@+id/emptyText"
+        <ProgressBar
+            style="?android:progressBarStyleSmallInverse"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:gravity="center"
-            android:text="@string/error_connection"/>
+            android:indeterminateTint="@color/white"/>
 
-        <Button
-            style="@style/Widget.AppCompat.Button.Borderless.Colored"
-            android:id="@+id/emptyAction"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/retry"/>
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginStart="@dimen/spacing_xlarge"
+            android:gravity="center_vertical"
+            android:textColor="?android:textColorPrimary"
+            android:fontFamily="sans-serif-medium"
+            android:text="@string/loading"/>
 
     </LinearLayout>
 

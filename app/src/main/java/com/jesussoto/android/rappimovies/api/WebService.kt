@@ -12,19 +12,19 @@ import retrofit2.http.Query
 interface WebService {
 
     @GET(PATH_MOVIE_POPULAR)
-    fun getPopularMovies(): Single<MoviesResponse>
+    fun getPopularMovies(@Query(PARAM_PAGE) page: Int = 1): Single<MoviesResponse>
 
     @GET(PATH_MOVIE_TOP_RATED)
-    fun getTopRatedMovies(): Single<MoviesResponse>
+    fun getTopRatedMovies(@Query(PARAM_PAGE) page: Int = 1): Single<MoviesResponse>
 
     @GET(PATH_MOVIE_UPCOMING)
-    fun getUpcomingMovies(): Single<MoviesResponse>
+    fun getUpcomingMovies(@Query(PARAM_PAGE) page: Int = 1): Single<MoviesResponse>
 
     @GET(PATH_TV_POPULAR)
-    fun getPopularTvSeries(): Single<TvSeriesResponse>
+    fun getPopularTvSeries(@Query(PARAM_PAGE) page: Int = 1): Single<TvSeriesResponse>
 
     @GET(PATH_TV_TOP_RATED)
-    fun getTopRatedTvSeries(): Single<TvSeriesResponse>
+    fun getTopRatedTvSeries(@Query(PARAM_PAGE) page: Int = 1): Single<TvSeriesResponse>
 
     @GET(PATH_SEARCH_MOVIES)
     fun searchMovies(@Query(PARAM_QUERY) query: String): Observable<MoviesResponse>
@@ -61,6 +61,6 @@ interface WebService {
         const val PARAM_QUERY = "query"
         const val PARAM_MOVIE_ID = "movie_id"
         const val PARAM_TV_ID = "tv_id"
-
+        const val PARAM_PAGE = "page"
     }
 }

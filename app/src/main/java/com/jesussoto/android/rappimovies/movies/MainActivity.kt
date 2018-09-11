@@ -7,12 +7,14 @@ import android.support.v4.app.Fragment
 import android.support.v4.app.FragmentManager
 import android.support.v4.app.FragmentStatePagerAdapter
 import android.support.v7.app.AppCompatActivity
+import android.support.v7.widget.PopupMenu
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.widget.AdapterView
 import android.widget.ArrayAdapter
 import com.jesussoto.android.rappimovies.R
+import com.jesussoto.android.rappimovies.offlinesearch.OfflineSearchActivity
 import com.jesussoto.android.rappimovies.onlinesearch.OnlineSearchActivity
 import kotlinx.android.synthetic.main.activity_main.*
 
@@ -46,7 +48,7 @@ class MainActivity: AppCompatActivity() {
 
     override fun onOptionsItemSelected(item: MenuItem?): Boolean {
         if (item?.itemId == R.id.menu_item_search) {
-            navigateToSearchActivity()
+            showFilteringPopUpMenu()
             return true
         }
         return super.onOptionsItemSelected(item)
@@ -94,6 +96,21 @@ class MainActivity: AppCompatActivity() {
         }
     }
 
+    private fun showFilteringPopUpMenu() {
+        val popup = PopupMenu(this, findViewById(R.id.menu_item_search))
+        popup.menuInflater.inflate(R.menu.menu_search, popup.menu)
+
+        popup.setOnMenuItemClickListener { item ->
+            when (item.itemId) {
+                R.id.search_offline -> navigateToOfflineSearchActivity()
+                R.id.search_online -> navigateToOnlineSearchActivity()
+            }
+            true
+        }
+
+        popup.show()
+    }
+
     private fun updateView(uiModel: MainUiModel?) {
         if (uiModel == null) {
             return
@@ -108,12 +125,12 @@ class MainActivity: AppCompatActivity() {
         )
 
         val fragments = arrayListOf<Fragment>(
-            ItemsFragment.newInstance(source, FilterType.POPULAR),
-            ItemsFragment.newInstance(source, FilterType.TOP_RATED)
+            PaginatedItemsFragment.newInstance(source, FilterType.POPULAR),
+            PaginatedItemsFragment.newInstance(source, FilterType.TOP_RATED)
         )
 
         if (source == SourceType.MOVIES) {
-            fragments.add(ItemsFragment.newInstance(source, FilterType.UPCOMING))
+            fragments.add(PaginatedItemsFragment.newInstance(source, FilterType.UPCOMING))
         }
 
         val pagerAdapter = MoviesPagerAdapter(supportFragmentManager, fragments, titles)
@@ -121,8 +138,11 @@ class MainActivity: AppCompatActivity() {
         tabLayout.setupWithViewPager(viewPager)
     }
 
-    private fun navigateToSearchActivity() {
-        // OfflineSearchActivity.start(this)
+    private fun navigateToOfflineSearchActivity() {
+         OfflineSearchActivity.start(this)
+    }
+
+    private fun navigateToOnlineSearchActivity() {
         OnlineSearchActivity.start(this)
     }
 

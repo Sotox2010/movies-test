@@ -1,6 +1,5 @@
 package com.jesussoto.android.rappimovies.data.repository
 
-import android.annotation.SuppressLint
 import android.arch.lifecycle.LiveData
 import android.arch.lifecycle.MutableLiveData
 import android.content.Context
@@ -16,22 +15,16 @@ import com.jesussoto.android.rappimovies.data.AppDatabase
 import com.jesussoto.android.rappimovies.data.dao.TvSeriesDao
 import com.jesussoto.android.rappimovies.data.entity.TvSeries
 import com.jesussoto.android.rappimovies.movies.FilterType
-import io.reactivex.Completable
 import io.reactivex.Flowable
 import io.reactivex.Observable
 import io.reactivex.Single
 import io.reactivex.schedulers.Schedulers
+import java.util.concurrent.Executors
 
 class TvSeriesRepository(
         private val service: WebService,
         private val database: AppDatabase,
         private val tvSeriesDao: TvSeriesDao) {
-
-    // Simple in-memory cache for popular tv-series.
-    private val popularSeriesLiveData: MutableLiveData<Resource<List<TvSeries>>> = MutableLiveData()
-
-    // Simple in-memory cache for top rated tv-series.
-    private val topRatedSeriesLiveData: MutableLiveData<Resource<List<TvSeries>>> = MutableLiveData()
 
     // Simple in-memory cache for videos.
     private val videosLiveData: MutableLiveData<Resource<List<Video>>> = MutableLiveData()
@@ -39,92 +32,85 @@ class TvSeriesRepository(
     // 5MiB cache for videos.
     private val videosCache = LruCache<Long, Resource<List<Video>>>(5 * 1024 * 1024)
 
+    // Executor to move off the Ui thread.
+    private val ioExecutor = Executors.newFixedThreadPool(3)
+
+    /**
+     * Load most popular tv-series from the network if no previous fetch occurred, or return the
+     * cached tv-series.
+     */
+    fun loadPopularTvSeriesByPage(page: Int, listCache: ArrayList<TvSeries>): LiveData<Resource<List<TvSeries>>> {
+        val liveData = MutableLiveData<Resource<List<TvSeries>>>()
+        val offset = (page - 1) * PAGE_SIZE
+
+        val loadNextPageTask = object : LoadNextPageTask<TvSeries, TvSeriesResponse>(
+                liveData, offset, PAGE_SIZE, listCache) {
+
+            override fun getItemsByPage(offset: Int, pageSize: Int): List<TvSeries> {
+                return tvSeriesDao.getPopularTvSeriesByPage(offset, pageSize)
+            }
+
+            override fun getServiceSingleCall(): Single<TvSeriesResponse> {
+                return service.getPopularTvSeries(page)
+            }
+
+            override fun saveToDatabase(items: List<TvSeries>) = saveTvSeriesToDb(items)
+
+            override fun setCategory(item: TvSeries) {
+                item.category = "popular"
+            }
+
+            override fun getResults(response: TvSeriesResponse): List<TvSeries> = response.results
+        }
+
+        ioExecutor.execute(loadNextPageTask)
+        return liveData
+    }
+
     /**
      * Load top-rated tv-series from the network if no previous fetch occurred, or return the
      * cached tv-series.
      */
-    fun loadPopularTvSeries(): LiveData<Resource<List<TvSeries>>> {
-        Single.concat(tvSeriesDao.getPopularTvSeries(), fetchPopularTvSeries())
-                .doOnSubscribe { popularSeriesLiveData.postValue(Resource.loading(null)) }
-                .filter { !it.isEmpty() }
-                .firstOrError()
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.computation())
-                .subscribe(
-                        // onSuccess
-                        { popularSeriesLiveData.postValue(Resource.success(it)) },
+    fun loadTopRatedTvSeriesByPage(page: Int, listCache: ArrayList<TvSeries>): LiveData<Resource<List<TvSeries>>> {
+        val liveData = MutableLiveData<Resource<List<TvSeries>>>()
+        val offset = (page - 1) * PAGE_SIZE
 
-                        //onError
-                        { popularSeriesLiveData.postValue(Resource.error(it, null)) }
-                )
+        val loadNextPageTask = object : LoadNextPageTask<TvSeries, TvSeriesResponse>(
+                liveData, offset, PAGE_SIZE, listCache) {
 
-        return popularSeriesLiveData
+            override fun getItemsByPage(offset: Int, pageSize: Int): List<TvSeries> {
+                return tvSeriesDao.getTopRatedTvSeriesByPage(offset, pageSize)
+            }
+
+            override fun getServiceSingleCall(): Single<TvSeriesResponse> {
+                return service.getTopRatedTvSeries(page)
+            }
+
+            override fun saveToDatabase(items: List<TvSeries>) = saveTvSeriesToDb(items)
+
+            override fun setCategory(item: TvSeries) {
+                item.category = "top-rated"
+            }
+
+            override fun getResults(response: TvSeriesResponse): List<TvSeries> = response.results
+        }
+
+        ioExecutor.execute(loadNextPageTask)
+        return liveData
     }
 
-    /**
-     * Load top-rated tv-series from the network if no previous fetch occurred, or return the
-     * cached tv-series.
-     */
-    fun loadTopRatedTvSeries(): LiveData<Resource<List<TvSeries>>> {
-        Single.concat(tvSeriesDao.getTopRatedTvSeries(), fetchTopRatedTvSeries())
-                .doOnSubscribe { topRatedSeriesLiveData.postValue(Resource.loading(null)) }
-                .filter { !it.isEmpty() }
-                .firstOrError()
-                .subscribeOn(Schedulers.computation())
-                .observeOn(Schedulers.computation())
-                .subscribe(
-                        // onSuccess
-                        { topRatedSeriesLiveData.postValue(Resource.success(it)) },
-
-                        //onError
-                        { topRatedSeriesLiveData.postValue(Resource.error(it, null)) }
-                )
-
-        return topRatedSeriesLiveData
-    }
 
     /**
-     * Core method for fetch popular tv-series from the network using RxJava, placed on a separate
-     * method for re-usability on first load or forced refresh.
+     * Persist tv-series in the database as a caching mechanism.
      */
-    private fun fetchPopularTvSeries(): Single<List<TvSeries>> {
-        return service.getPopularTvSeries()
-                .map(TvSeriesResponse::results)
-                .flatMapObservable { Observable.fromIterable(it) }
-                .doOnNext { it.category = "popular" }
-                .toList()
-                .flatMapCompletable(this::saveTvSeries)
-                .andThen(tvSeriesDao.getPopularTvSeries())
-    }
-
-    /**
-     * Core method for fetch top-rated tv-series from the network using RxJava, placed on a separate
-     * method for re-usability on first load or forced refresh.
-     *
-     * @param resultData the [LiveData] to post the result to.
-     */
-    @SuppressLint("CheckResult")
-    private fun fetchTopRatedTvSeries(): Single<List<TvSeries>> {
-        return service.getTopRatedTvSeries()
-                .map(TvSeriesResponse::results)
-                .flatMapObservable { Observable.fromIterable(it) }
-                .doOnNext { it.category = "top-rated" }
-                .toList()
-                .flatMapCompletable(this::saveTvSeries)
-                .andThen(tvSeriesDao.getTopRatedTvSeries())
-    }
-
-    /**
-     *
-     */
-    private fun saveTvSeries(tvSeriesList: List<TvSeries>): Completable {
-        return Completable.fromAction {
+    private fun saveTvSeriesToDb(tvSeriesList: List<TvSeries>) {
+        database.runInTransaction {
             tvSeriesDao.insertTvSeries(tvSeriesList)
         }
     }
 
     /**
-     *
+     * Search in the local database for matching tv-series by title.
      */
     fun searchByNameAndCategory(query: String, category: FilterType): Flowable<List<TvSeries>> {
         if (category == FilterType.UPCOMING) {
@@ -145,14 +131,14 @@ class TvSeriesRepository(
     }
 
     /**
-     *
+     * Load a single movie by its id.
      */
     fun loadTvSeriesById(movieId: Long): Single<TvSeries> {
         return tvSeriesDao.getTvSeriesById(movieId)
     }
 
     /**
-     *
+     * Search tv-series from the network using TheMovieDB web service, filtering them by title.
      */
     fun searchRemotelyByName(query: String): Observable<List<TvSeries>> {
         return service.searchTvSeries(query)
@@ -160,7 +146,7 @@ class TvSeriesRepository(
     }
 
     /**
-     *
+     * Fetch videos for a specific tv-series by id.
      */
     fun loadVideosByTvSeriesID(tvSeriesId: Long): LiveData<Resource<List<Video>>> {
         val cachedResource = videosCache.get(tvSeriesId)
@@ -187,6 +173,7 @@ class TvSeriesRepository(
     }
 
     companion object {
+        private const val PAGE_SIZE = 20
 
         @Volatile
         private var sInstance: TvSeriesRepository? = null

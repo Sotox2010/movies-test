@@ -21,7 +21,6 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
-import butterknife.ButterKnife
 import com.jesussoto.android.rappimovies.R
 import com.jesussoto.android.rappimovies.api.WebServiceUtils
 import com.jesussoto.android.rappimovies.api.model.Video
@@ -32,7 +31,6 @@ import com.jesussoto.android.rappimovies.widget.SynchronizedScrollView
 import com.squareup.picasso.Picasso
 import com.squareup.picasso.Target
 import kotlinx.android.synthetic.main.activity_movie_detail.*
-import kotlinx.android.synthetic.main.fragment_movies.*
 import java.text.SimpleDateFormat
 import java.util.*
 
@@ -54,7 +52,6 @@ class ItemDetailActivity : AppCompatActivity(), SynchronizedScrollView.OnScrollL
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_movie_detail)
-        ButterKnife.bind(this)
 
         if (intent.hasExtra(EXTRA_ITEM)) {
             item = intent.getParcelableExtra(EXTRA_ITEM)
@@ -152,12 +149,14 @@ class ItemDetailActivity : AppCompatActivity(), SynchronizedScrollView.OnScrollL
         if (item.posterPath != null) {
             Picasso.with(this)
                     .load(WebServiceUtils.buildMoviePosterUri(item.posterPath))
+                    .placeholder(R.drawable.poster_image_placeholder)
                     .into(posterTarget)
         }
 
         if (item.backdropPath != null) {
             Picasso.with(this)
                     .load(WebServiceUtils.buildMovieBackdropUri(item.backdropPath))
+                    .placeholder(R.drawable.image_placeholder)
                     .into(backdropView)
         }
 
@@ -339,7 +338,7 @@ class ItemDetailActivity : AppCompatActivity(), SynchronizedScrollView.OnScrollL
         }
 
         /**
-         * Use this then need to show details for a item view that is not in the local database.
+         * Use this when need to show details for a item view that is not in the local database.
          */
         fun startWithNetworkItem(launching: FragmentActivity, item: DisplayableItem) {
             val movieDetailIntent = Intent(launching, ItemDetailActivity::class.java)

@@ -6,6 +6,7 @@
     android:paddingEnd="@dimen/spacing_large"
     android:layout_width="match_parent"
     android:fontFamily="sans-serif"
+    android:textSize="18sp"
     android:layout_height="48dp"
     android:gravity="center_vertical"
     tools:text="Popular Movies"/>

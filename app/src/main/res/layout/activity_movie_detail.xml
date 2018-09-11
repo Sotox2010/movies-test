@@ -158,7 +158,8 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content">
 
-                        <include layout="@layout/include_empty_view"/>
+                        <include layout="@layout/include_empty_view"
+                            android:id="@+id/emptyContainer"/>
 
                         <ProgressBar
                             style="?android:progressBarStyleSmall"
