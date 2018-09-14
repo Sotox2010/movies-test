@@ -95,7 +95,7 @@ extensión de funciones.
 
 ## Lo que hubiese hecho con más tiempo:
 
-- Dagger para injeccion de dependencias.
+- Dagger para inyeccion de dependencias.
 - Manejo de errores más detallado.
 - Pruebas unitarias: a pesar de que no hay ninguna actualmente, el código está muy bien modularizado y pensado para probarlo fácil y extensivamente.
 - Un buen ícono para el launcher.
